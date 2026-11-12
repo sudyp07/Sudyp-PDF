@@ -1,4 +1,4 @@
-import {url,esc} from './ui.js';
+import {url,esc} from './ui.js?v=5';
 const loading=new Map();
 const libraryUrls={
  pdf:[url('vendor/pdf-lib.min.js'),'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js','https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'],

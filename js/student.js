@@ -1,6 +1,6 @@
-import {mountShell,icon,esc,bySlug,notify,recent} from './ui.js';
-import {loadLib,loadPdf,readPdf,texts,imageToPdf,makeTextPdf,blobDownload,basename,pagesFromSpec} from './core.js';
-import {processFiles} from './processors.js';
+import {mountShell,icon,esc,bySlug,notify,recent} from './ui.js?v=5';
+import {loadLib,loadPdf,readPdf,texts,imageToPdf,makeTextPdf,blobDownload,basename,pagesFromSpec} from './core.js?v=5';
+import {processFiles} from './processors.js?v=5';
 mountShell();
 const slug=document.documentElement.dataset.student;const item=bySlug(slug);if(!item)throw Error('Invalid student tool');
 document.title=`${item.title} | SUDYP PDF`;document.getElementById('workspace-title').textContent=item.title;document.getElementById('workspace-description').textContent=item.description;recent(slug);
@@ -23,7 +23,17 @@ const forms={
 };
 $('student-fields').innerHTML=forms[slug];
 if(isFile&&slug!=='academic-combiner'){$('student-fields').insertAdjacentHTML('beforeend','<div id="student-file-list" class="file-list"></div>')}
-if(isFile){$('files')?.addEventListener('change',e=>{let incoming=[...e.target.files];if(slug==='academic-combiner')files=[...files,...incoming];else files=incoming;$('files').value='';renderSelected()})}
+if(isFile){
+  const accept = slug==='image-notes'? new Set(['jpg','jpeg','png']):new Set(['pdf']);
+  const addFiles=incoming=>{
+    const chosen=Array.from(incoming);
+    for(const f of chosen){const ext=(f.name.split('.').pop()||'').toLowerCase();if(!accept.has(ext)||!f.size||f.size>200*1024*1024){notify(`Invalid file: ${f.name}. Please choose a supported file under 200 MB.`, 'error');return}}
+    if(slug==='academic-combiner'||slug==='image-notes')files=[...files,...chosen];else files=chosen.slice(0,1);
+    renderSelected();notify(`${chosen.length} file(s) added.`, 'success');
+  };
+  $('files')?.addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
+  window.SudypUpload?.onFiles(addFiles);
+} 
 function renderSelected(){const holder=$('student-file-list');if(!holder)return;holder.innerHTML=files.map((f,i)=>`<div class="file-item" draggable="true" data-index="${i}">${icon('file-text',17)}<div class="file-meta"><strong>${esc(f.name)}</strong><small>${(f.size/1024).toFixed(1)} KB</small></div><button data-remove="${i}" aria-label="Remove file">×</button></div>`).join('');holder.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{files.splice(+b.dataset.remove,1);renderSelected()}));holder.querySelectorAll('[draggable]')?.forEach(el=>{el.ondragstart=e=>e.dataTransfer.setData('text/plain',el.dataset.index);el.ondragover=e=>e.preventDefault();el.ondrop=e=>{e.preventDefault();const from=+e.dataTransfer.getData('text/plain'),to=+el.dataset.index;if(from===to||!Number.isInteger(from))return;files.splice(to,0,files.splice(from,1)[0]);renderSelected()}})}
 let cards=[];const storageKey='sudyp_flashcards';try{cards=JSON.parse(localStorage.getItem(storageKey)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}
 function drawFlash(){if(slug!=='flashcards')return;const c=$('flashcard');if(!c)return;const card=cards[flashIndex];c.innerHTML=card?`${esc(flipped?card.a:card.q)}<small>${flipped?'Answer · click for question':'Question · click to reveal answer'}</small>`:'No cards saved yet.';$('card-count').textContent=cards.length?`${flashIndex+1} / ${cards.length} cards`:'0 cards'}

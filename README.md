@@ -14,7 +14,7 @@ For a user/organization site named `YOUR-USERNAME.github.io`, use `https://YOUR-
 
 ## Develop locally
 
-You can open most pages in a browser, but the service worker requires HTTP(S). For a complete local preview you can use any static server. No Node build or dependencies are required.
+Always serve the directory over HTTP; do not double-click `index.html` using `file://`. In VS Code install Live Server, open this folder, and select **Go Live**. Alternatively run `py -m http.server 5500` in the project directory and visit `http://localhost:5500`. No Node build or dependency installation is required.
 
 ## Document processing and libraries
 
@@ -26,15 +26,15 @@ Library delivery uses CDNs, but the application does not upload document content
 
 ## Functional scope
 
-The tool directory only lists actual browser-side implementations. Some operations are deliberately **best effort**:
+The PDF tools are browser-side implementations; processing libraries must load successfully for operations to complete. Some operations are deliberately **best effort**:
 - DOCX, XLSX, PPTX and HTML → PDF extract readable text, not original complex layout, images, charts or fonts.
 - PDF → DOCX extracts text into simple Word paragraphs. PDF → XLSX puts extracted lines into spreadsheet column A; table structure is not inferred.
 - Compress/repair/grayscale rebuild rasterized pages: selectable text, hyperlinks, fields and layer data are lost and compression might not reduce size.
 - The metadata cleaner clears common PDF metadata but does not guarantee deep forensic scrubbing.
 - PDF comparison compares extracted text, not pixel differences.
 - Signature tool adds a visual signature image, not a cryptographic digital signature.
-- The editor places visible overlays; it cannot remove or modify underlying PDF text.
-- No password encryption, password bypass, full OCR or exact layout reconstruction is claimed.
+- The editor supports selecting PDF text runs for visual replacement with inferred size and approximate font family. Replaced-text pages are rasterized so original text objects from those pages are not kept; other pages remain vector. Exact matching of every PDF embedded font, complex text layout, and native editing of the original PDF text structures is not possible in this browser-only build. Never use visual text replacement for secure redaction.
+- Password-protected documents can be opened with a password you know using the Unlock tool; the new PDF is a flattened image copy. Password encryption, password cracking, full OCR and exact layout reconstruction are not implemented.
 - Standard PDF fonts may replace unsupported non-Latin characters with `?` in newly generated documents.
 
 Files are temporary in the browser. Only theme preference, favorite tool IDs, recently used tool IDs, and manually entered flashcards use localStorage.
@@ -44,3 +44,11 @@ Files are temporary in the browser. Only theme preference, favorite tool IDs, re
 `index.html`, `tools.html`, `student-tools.html`, general pages, dedicated `/tools/` and `/student/` pages, `/css/`, `/js/`, `/assets/`, `/vendor/`, `sw.js`, and `manifest.json`.
 
 © 2026 Sudip Nepal · https://github.com/sudyp07
+
+## Upload and batch processing
+
+- Tool pages use a visible native file picker and prevent PDF drops from navigating the browser away. Drop multiple files anywhere on a tool page or choose them together.
+- Merge and image-to-PDF tools combine files in list order, which can be changed by dragging the rows. Compare accepts exactly two PDFs.
+- Single-document operations that support batch processing package separate results in a ZIP when given more than one PDF.
+- Organize, Reader, Sign, Edit and Form Filler use one PDF at a time so that per-document previews and forms remain understandable.
+- If the PDF engine cannot load, selected files stay visible; processing reports a clear error instead of failing silently.

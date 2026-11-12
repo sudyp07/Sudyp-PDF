@@ -21,7 +21,7 @@ export const tools = [
 ['excel-to-pdf','Excel to PDF','Convert','Create a PDF from spreadsheet cell values.','table','single-xlsx'],
 ['powerpoint-to-pdf','PowerPoint to PDF','Convert','Convert slide text into readable PDF pages.','presentation','single-pptx'],
 ['html-to-pdf','HTML to PDF','Convert','Convert the readable text of an HTML file.','code','single-html'],
-['edit-pdf','Edit PDF','Edit','Add text, highlights and rectangles to pages.','pen','single'],
+['edit-pdf','Edit PDF','Edit','Visually replace selectable text and add annotations.','pen','single'],
 ['watermark','Watermark','Edit','Add a subtle text watermark to every page.','droplet','single'],
 ['sign-pdf','Sign PDF','Edit','Draw a signature and place it in the document.','pen','single'],
 ['metadata','Edit metadata','Edit','Update title, author, subject and keywords.','settings','single'],

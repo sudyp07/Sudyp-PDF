@@ -1,4 +1,4 @@
-import {mountShell,tools,students,categories,renderCards,toolCard,icon,esc,url,getSetting} from './ui.js';
+import {mountShell,tools,students,categories,renderCards,toolCard,icon,esc,url,getSetting} from './ui.js?v=5';
 mountShell();
 const $=id=>document.getElementById(id);
 const matchesTask=(t,q)=>{const stop=new Set(['pdf','a','the','an','to','and','of','my','file','files','document','documents','please','convert','make','create','tool','for','i','want','need']);const words=q.trim().toLowerCase().split(/[^a-z0-9]+/).filter(w=>w&&!stop.has(w));const haystack=[t.title,t.description,t.category,t.slug].join(' ').toLowerCase();return !words.length||words.every(w=>haystack.includes(w))};

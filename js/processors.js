@@ -1,11 +1,11 @@
-import {loadLib,loadPdf,readPdf,texts,copyPages,pagesFromSpec,render,canvasBlob,zipFiles,imageToPdf,textToDocx,textToXlsx,officeText,makeTextPdf,rasterRebuild,downloadText,sizeLabel,xmlEscape,cleanPdfText} from './core.js';
+import {loadLib,loadPdf,readPdf,texts,copyPages,pagesFromSpec,render,canvasBlob,zipFiles,imageToPdf,textToDocx,textToXlsx,officeText,makeTextPdf,rasterRebuild,downloadText,sizeLabel,xmlEscape,cleanPdfText} from './core.js?v=5';
 const field=(id,label,type='text',value='',hint='')=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${value}"/>${hint?`<small class="hint">${hint}</small>`:''}</div>`;
 const selector=(id,label,opts)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(([v,n])=>`<option value="${v}">${n}</option>`).join('')}</select></div>`;
 const range=()=>field('page-ranges','Pages (1-3, 5, 8)','text','all','Use “all” or comma-separated page numbers.');
 const formatOptions=()=>selector('paper','Page size',[['fit','Fit original image'],['A4','A4'],['Letter','US Letter']]);
 const qualityInfo='<div class="info-banner">Layout, images, fonts and tables may not reproduce exactly in text-based conversions.</div>';
 export function optionsFor(slug){switch(slug){
-case 'split':return selector('split-mode','Split mode',[['ranges','Create one PDF per page range'],['every','Split into individual pages']]])+field('page-ranges','Page ranges','text','1-2,3-4','For range mode, separate output documents with commas.');
+case 'split':return selector('split-mode','Split mode',[['ranges','Create one PDF per page range'],['every','Split into individual pages']])+field('page-ranges','Page ranges','text','1-2,3-4','For range mode, separate output documents with commas.');
 case 'extract-pages':case 'remove-pages':case 'rotate':case 'crop':case 'page-numbers':case 'page-labeler':return range()+(slug==='rotate'?selector('rotate-angle','Rotation',[['90','Clockwise 90°'],['180','180°'],['270','Counter-clockwise 90°']]):'')+(slug==='crop'?'<div class="field-row">'+field('margin-x','Horizontal trim (pt)','number','25')+field('margin-y','Vertical trim (pt)','number','25')+'</div>':'')+(slug==='page-numbers'?selector('position','Page number position',[['bottom-center','Bottom center'],['bottom-right','Bottom right'],['top-right','Top right']])+field('start','Start number','number','1'):'');
 case 'pdf-to-jpg':case 'pdf-to-png':return selector('resolution','Image resolution',[['1','Standard'],['1.5','High'],['2','Extra high (more memory)']])+range();
 case 'jpg-to-pdf':case 'png-to-pdf':return formatOptions();
@@ -21,7 +21,19 @@ case 'unlock-pdf':return '<div class="field"><label for="pdf-password">Current P
 case 'permission-check':return `<div class="info-banner">PDF permissions are document flags, not proof of access control. Encrypted PDFs may require a password and cannot be bypassed.</div>`;
 case 'pdf-to-text':case 'pdf-to-markdown':case 'pdf-to-html':return range();
 case 'sign-pdf':return '<div class="field"> <label>Draw your signature</label><canvas id="signature-canvas" class="signature-canvas" width="620" height="180" aria-label="Signature drawing area"></canvas><button class="button button-secondary button-small" type="button" id="clear-signature">Clear drawing</button></div>'+field('signature-page','Place on page','number','1')+'<div class="field-row">'+field('signature-x','From left (points)','number','55')+field('signature-y','From bottom (points)','number','75')+'</div>';
-case 'edit-pdf':return selector('edit-mode','Markup tool',[['text','Add text'],['highlight','Highlight area'],['box','Draw rectangle'],['underline','Underline'],['strike','Strikethrough'],['draw','Freehand drawing'],['image','Place image']])+`<div class="field"><label for="edit-image">Image (PNG or JPG for image mode)</label><input id="edit-image" type="file" accept="image/png,image/jpeg"></div>`+field('edit-text','Text to place','text','Review note')+field('edit-page','Page','number','1')+'<div class="info-banner">Click or drag on the preview. Use Undo to remove the last mark. Exports an overlay; it does not rewrite existing PDF text.</div>';
+case 'edit-pdf':return selector('edit-mode','Editing tool',[["replace","Replace existing text"],["text","Add new text"],["highlight","Highlight area"],["box","Draw rectangle"],["underline","Underline"],["strike","Strikethrough"],["draw","Freehand drawing"],["image","Place image"]])+
+`<div id="replace-fields" class="replace-fields">
+ <div class="field"><label for="edit-original">Selected PDF text</label><textarea id="edit-original" rows="2" readonly placeholder="Click text on the page preview"></textarea></div>
+ <div class="field"><label for="edit-replacement">Replace with</label><textarea id="edit-replacement" rows="3" placeholder="Your replacement text"></textarea></div>
+ <div class="field-row"><div class="field"><label for="edit-size">Font size (pt)</label><input id="edit-size" type="number" min="3" max="180" step=".5" value="12"></div>
+ <div class="field"><label for="edit-font">Closest font</label><select id="edit-font"><option value="Arial">Sans serif</option><option value="Times New Roman">Serif</option><option value="Courier New">Monospace</option></select></div></div>
+ <div class="field-row"><div class="field"><label for="edit-color">Text colour</label><input id="edit-color" type="color" value="#222222"></div>
+ <div class="field"><label for="edit-background">Background colour</label><input id="edit-background" type="color" value="#ffffff"></div></div>
+ <button type="button" class="button button-primary" id="apply-replacement">Apply text change</button>
+ <div class="info-banner">Text edits visually replace selectable text. Exact embedded fonts, reflow and full editability are not supported. Changed pages are saved as high-resolution images; other pages stay unchanged. Not for confidential redaction.</div></div>
+ <div class="field" id="edit-overlay-fields"><label for="edit-image">Image for Place image mode</label><input id="edit-image" type="file" accept="image/png,image/jpeg"></div>`+
+ field('edit-text','Text for Add new text','text','Review note')+field('edit-page','Page','number','1')+
+ `<div class="info-banner">Choose a tool, then click the highlighted text or drag on the document preview. Undo and redo are available above the preview.</div>`;
 case 'form-filler':return '<p class="muted-small">Choose a PDF to display its supported interactive form fields.</p><div id="form-fields" class="form-stack"></div>';
 case 'organize':return '<div class="info-banner">Reorder thumbnails by dragging. Rotate, duplicate or remove pages using their controls.</div>';
 case 'reader':return '<div class="info-banner">The reader renders one page at a time, so large documents stay responsive.</div>';
