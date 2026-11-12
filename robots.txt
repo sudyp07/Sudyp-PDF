@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://sudyp07.github.io/sudyp-pdf/sitemap.xml

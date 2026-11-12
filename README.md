@@ -1,54 +1,72 @@
 # SUDYP PDF
 
-A free, client-side PDF toolkit made with HTML5, CSS3 and vanilla JavaScript. No backend, database, Node.js, build step, login or tracking.
+Free static PDF toolkit built using HTML, CSS, and vanilla JavaScript. No backend, database, account system, paid plan, user data collection, or cloud file processing. Theme: white / emerald / black / royal blue.
 
-## Deploy on GitHub Pages
+## What this edition adds
 
-1. Create a **public** GitHub repository, for example `sudyp-pdf`.
-2. Upload the **contents** of this folder directly into the repository root (so `index.html` is in the root).
-3. Commit and push to `main`.
-4. Open **Settings → Pages → Build and deployment**, choose **Deploy from a branch**, **main**, **/(root)** and **Save**.
-5. Visit `https://YOUR-USERNAME.github.io/sudyp-pdf/`.
+- Hero file drop zone with Merge / Split / Compress, multi-file picker, and Merge → Compress pipeline.
+- Global Ctrl/Cmd+K command palette, recent tool shortcuts, favorites and anonymous local-only processed-file counters.
+- Local progress states and real before/after file size information for compression. Optional best-effort compression target for university portals.
+- AES-GCM .spdf file encryption and authenticating unlock; **.spdf is NOT a password-protected standard PDF**. Existing encrypted PDF files may be opened only with the known password and are rasterized on export. No password cracking.
+- OCR workspace using Tesseract.js, English and Nepali when worker/core/language assets are installed.
+- Student cover page generator with Tribhuvan University-style / University of the People-style / classic layouts (not official templates); APA/Harvard basic reference organiser; submission pack that merges and numbers PDFs.
+- Nepali/English UI toggle for major navigation and homepage labels. Nepali PDF generation via browser-canvas Unicode rendering if the browser's Devanagari font works; these pages are image-based, not searchable.
+- Manifest, service worker and precache; per-tool SEO titles, metadata, FAQs, `SoftwareApplication` structured data, sitemap and OG preview PNG.
+- Optional GoatCounter page-view analytics, **disabled by default**. If enabled, it sends page-view data externally, never document files.
 
-For a user/organization site named `YOUR-USERNAME.github.io`, use `https://YOUR-USERNAME.github.io/` instead. Relative file paths support either route.
+## GitHub Pages deployment — recommended for bundled offline libraries
 
-## Develop locally
+1. Create a **public** GitHub repository, preferably named `sudyp-pdf`, under `sudyp07`.
+2. Upload the **contents** of this project folder to the repository root (`index.html` must be in the root).
+3. In **Settings → Pages**, choose **GitHub Actions** as the build and deployment source.
+4. Go to **Actions → Publish SUDYP PDF to GitHub Pages** and run it if it hasn't started on your first push.
+5. The workflow downloads the pinned `pdf-lib`, `PDF.js` and PDF worker assets, optionally OCR assets, rebuilds the PWA precache inventory, and deploys a fully static site. No runtime server/database is used.
+6. Open `https://sudyp07.github.io/sudyp-pdf/` (adjust the path if you use another repository name).
+7. Visit once online and allow the service worker to finish caching before going offline. OCR assets may first need to be opened/downloaded separately; larger assets are deliberately not pre-cached to keep the first visit fast.
 
-Always serve the directory over HTTP; do not double-click `index.html` using `file://`. In VS Code install Live Server, open this folder, and select **Go Live**. Alternatively run `py -m http.server 5500` in the project directory and visit `http://localhost:5500`. No Node build or dependency installation is required.
+**Important:** Due to unavailable outbound downloads in the archive-building environment, the supplied ZIP includes JSZip, all application code and a GitHub Actions downloader, but does **not** contain the large `pdf-lib`, `PDF.js` or Tesseract binaries. The GitHub Actions deployment fetches and bundles PDF engines in the published site. The ZIP itself needs a connection to load those engines until the optional local setup has completed.
 
-## Document processing and libraries
+### Run locally in VS Code
 
-- **pdf-lib 1.17.1** is lazy-loaded from jsDelivr, for PDF creation and modification (MIT).
-- **PDF.js 3.11.174** is lazy-loaded from cdnjs, for rendering and text extraction (Apache-2.0).
-- **JSZip** is included under `vendor/` for ZIP and Office Open XML processing (MIT or GPLv3 dual-licensed; used under MIT).
+Open the extracted project root in VS Code and start Live Server, or run:
 
-Library delivery uses CDNs, but the application does not upload document contents, create remote accounts, or call processing APIs. A network connection is needed when a library is first loaded; offline app shell caching is not a guarantee of offline PDF processing.
+```powershell
+py -m http.server 5500
+```
 
-## Functional scope
+Open `http://localhost:5500/`.
 
-The PDF tools are browser-side implementations; processing libraries must load successfully for operations to complete. Some operations are deliberately **best effort**:
-- DOCX, XLSX, PPTX and HTML → PDF extract readable text, not original complex layout, images, charts or fonts.
-- PDF → DOCX extracts text into simple Word paragraphs. PDF → XLSX puts extracted lines into spreadsheet column A; table structure is not inferred.
-- Compress/repair/grayscale rebuild rasterized pages: selectable text, hyperlinks, fields and layer data are lost and compression might not reduce size.
-- The metadata cleaner clears common PDF metadata but does not guarantee deep forensic scrubbing.
-- PDF comparison compares extracted text, not pixel differences.
-- Signature tool adds a visual signature image, not a cryptographic digital signature.
-- The editor supports selecting PDF text runs for visual replacement with inferred size and approximate font family. Replaced-text pages are rasterized so original text objects from those pages are not kept; other pages remain vector. Exact matching of every PDF embedded font, complex text layout, and native editing of the original PDF text structures is not possible in this browser-only build. Never use visual text replacement for secure redaction.
-- Password-protected documents can be opened with a password you know using the Unlock tool; the new PDF is a flattened image copy. Password encryption, password cracking, full OCR and exact layout reconstruction are not implemented.
-- Standard PDF fonts may replace unsupported non-Latin characters with `?` in newly generated documents.
+For offline development on Windows, first run from the project root (with an internet connection):
 
-Files are temporary in the browser. Only theme preference, favorite tool IDs, recently used tool IDs, and manually entered flashcards use localStorage.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-offline.ps1
+py -m http.server 5500
+```
 
-## Static project layout
+The optional setup downloads processing libraries to `vendor/` once. After installation, check that all requested `.js`, `.wasm`, and `.traineddata.gz` files exist. No `npm install` or build command is required for local preview.
 
-`index.html`, `tools.html`, `student-tools.html`, general pages, dedicated `/tools/` and `/student/` pages, `/css/`, `/js/`, `/assets/`, `/vendor/`, `sw.js`, and `manifest.json`.
+### Use a custom domain
+
+Purchase or use a domain you own, add its DNS records as instructed by GitHub Pages, and set the domain in repository **Settings → Pages → Custom domain**. Then update canonical URLs, `sitemap.xml`, and Open Graph image URLs from the default `sudyp07.github.io/sudyp-pdf` location. No custom domain was supplied, so this project has no `CNAME` entry.
+
+### Analytics
+
+Analytics are **off** by default. Optionally set `goatCounterUrl` to your own GoatCounter website in `js/site-config.js`. This introduces an external page-view request and should be disclosed in your site's privacy policy. File data is never included.
+
+## Engineering notes and limits
+
+- Only browser JavaScript libraries fetch across the network; document bytes are processed locally. The service worker caches app assets, not PDF contents. File data stays in memory.
+- The homepage has zero uploaded document bytes; counters saved locally record only the number of successful jobs/files, never filenames, content, images, passwords, or metadata.
+- PDF manipulation relies on pinned **pdf-lib 1.17.1** (MIT); render/extract on **PDF.js 3.11.174** (Apache-2.0); ZIP on local **JSZip**; OCR on optional **Tesseract.js 5.1.1** / core (Apache-2.0). These tools may fail for password-protected, corrupted or highly complex PDFs, and large files can exhaust browser memory.
+- Text replacement in existing PDFs is visual. Edited pages are flattened to images; original embedded font/line breaks cannot be recreated exactly. Not suitable for secure redaction.
+- DOCX/XLSX/PPTX/HTML conversions reconstruct readable text only, not native Office layout, charts, or full tables.
+- Compression rasterizes pages and may **increase** size. Compression targets are best-effort and always report actual sizes.
+- OCR accuracy varies; image resolution, script, scan quality and device memory matter. First OCR startup with large language assets can take time.
+- `Protect PDF file` encrypts file contents as `.spdf` using PBKDF2 + AES-GCM. This is not compatible with PDF reader password prompts; users must unlock it here to recover the original PDF.
+- Do not use this project as a substitute for specialised document redaction, forensic sanitisation or certified signature software.
+
+## Verification
+
+Code/lint-like JS syntax checks, page path checks, real browser file selection/drop tests, HTTPS service-worker paths, and client-side encryption round-trip can be checked with browser automation in local environment. Real vendor-engine processing requires the pinned library files to download; if network blocks installation, it cannot be verified end-to-end until those files are present.
 
 © 2026 Sudip Nepal · https://github.com/sudyp07
-
-## Upload and batch processing
-
-- Tool pages use a visible native file picker and prevent PDF drops from navigating the browser away. Drop multiple files anywhere on a tool page or choose them together.
-- Merge and image-to-PDF tools combine files in list order, which can be changed by dragging the rows. Compare accepts exactly two PDFs.
-- Single-document operations that support batch processing package separate results in a ZIP when given more than one PDF.
-- Organize, Reader, Sign, Edit and Form Filler use one PDF at a time so that per-document previews and forms remain understandable.
-- If the PDF engine cannot load, selected files stay visible; processing reports a clear error instead of failing silently.

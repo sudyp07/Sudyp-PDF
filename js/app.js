@@ -1,4 +1,4 @@
-import {mountShell,tools,students,categories,renderCards,toolCard,icon,esc,url,getSetting} from './ui.js?v=5';
+import {mountShell,tools,students,categories,renderCards,toolCard,icon,esc,url,getSetting} from './ui.js?v=9';
 mountShell();
 const $=id=>document.getElementById(id);
 const matchesTask=(t,q)=>{const stop=new Set(['pdf','a','the','an','to','and','of','my','file','files','document','documents','please','convert','make','create','tool','for','i','want','need']);const words=q.trim().toLowerCase().split(/[^a-z0-9]+/).filter(w=>w&&!stop.has(w));const haystack=[t.title,t.description,t.category,t.slug].join(' ').toLowerCase();return !words.length||words.every(w=>haystack.includes(w))};
@@ -17,5 +17,5 @@ const filters=$('category-filters');filters.innerHTML=categories.map(c=>`<button
 const refresh=()=>{const list=tools.filter(t=>(current==='All tools'||current==='Favorites'||t.category===current)&&matchesTask(t,input.value));const set=current==='Favorites'?list.filter(x=>getSetting('favorites',[]).includes(x.slug)):list;renderCards(set,$('directory-grid'));$('directory-count').textContent=`${set.length} available tools`};filters.addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(!b)return;current=b.dataset.category;filters.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));refresh()});input.addEventListener('input',refresh);refresh();
 }
 if($('student-directory')){renderCards(students,$('student-directory'))}
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){const input=$('directory-search')||$('home-search');if(input){e.preventDefault();input.focus();input.select()}}});
+
 

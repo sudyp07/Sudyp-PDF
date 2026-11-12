@@ -1,23 +1,27 @@
-import {loadLib,loadPdf,readPdf,texts,copyPages,pagesFromSpec,render,canvasBlob,zipFiles,imageToPdf,textToDocx,textToXlsx,officeText,makeTextPdf,rasterRebuild,downloadText,sizeLabel,xmlEscape,cleanPdfText} from './core.js?v=5';
+import {encryptPdf,decryptPdf} from './security.js?v=9';
+import {runOCR} from './ocr.js?v=9';
+import {loadLib,loadPdf,readPdf,texts,copyPages,pagesFromSpec,render,canvasBlob,zipFiles,imageToPdf,textToDocx,textToXlsx,officeText,makeTextPdf,rasterRebuild,downloadText,sizeLabel,xmlEscape,cleanPdfText,basename} from './core.js?v=9';
 const field=(id,label,type='text',value='',hint='')=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${value}"/>${hint?`<small class="hint">${hint}</small>`:''}</div>`;
 const selector=(id,label,opts)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(([v,n])=>`<option value="${v}">${n}</option>`).join('')}</select></div>`;
 const range=()=>field('page-ranges','Pages (1-3, 5, 8)','text','all','Use “all” or comma-separated page numbers.');
 const formatOptions=()=>selector('paper','Page size',[['fit','Fit original image'],['A4','A4'],['Letter','US Letter']]);
 const qualityInfo='<div class="info-banner">Layout, images, fonts and tables may not reproduce exactly in text-based conversions.</div>';
 export function optionsFor(slug){switch(slug){
-case 'split':return selector('split-mode','Split mode',[['ranges','Create one PDF per page range'],['every','Split into individual pages']])+field('page-ranges','Page ranges','text','1-2,3-4','For range mode, separate output documents with commas.');
+case 'split':return selector('split-mode','Split mode',[['ranges','Create one PDF per page range'],['every','Split into individual pages']])+field('page-ranges','Page ranges','text','all','For range mode, separate output documents with commas.');
 case 'extract-pages':case 'remove-pages':case 'rotate':case 'crop':case 'page-numbers':case 'page-labeler':return range()+(slug==='rotate'?selector('rotate-angle','Rotation',[['90','Clockwise 90°'],['180','180°'],['270','Counter-clockwise 90°']]):'')+(slug==='crop'?'<div class="field-row">'+field('margin-x','Horizontal trim (pt)','number','25')+field('margin-y','Vertical trim (pt)','number','25')+'</div>':'')+(slug==='page-numbers'?selector('position','Page number position',[['bottom-center','Bottom center'],['bottom-right','Bottom right'],['top-right','Top right']])+field('start','Start number','number','1'):'');
 case 'pdf-to-jpg':case 'pdf-to-png':return selector('resolution','Image resolution',[['1','Standard'],['1.5','High'],['2','Extra high (more memory)']])+range();
-case 'jpg-to-pdf':case 'png-to-pdf':return formatOptions();
+case 'jpg-to-pdf':case 'png-to-pdf':case 'image-to-pdf':return formatOptions();
 case 'pdf-to-word':case 'pdf-to-excel':case 'word-to-pdf':case 'excel-to-pdf':case 'powerpoint-to-pdf':case 'html-to-pdf':return qualityInfo;
 case 'watermark':return field('watermark-text','Watermark text','text','CONFIDENTIAL')+'<div class="field-row">'+field('opacity','Opacity (0.05 to 1)','number','.22')+field('font-size','Font size','number','52')+'</div>';
 case 'metadata':return field('meta-title','Document title')+field('meta-author','Author')+field('meta-subject','Subject')+field('meta-keywords','Keywords (comma separated)');
-case 'compress':return selector('quality','Compression level',[['.82','Light · better quality'],['.60','Balanced'],['.39','Strong · smaller images']])+`<div class="info-banner">This rebuilds pages as images. Selectable text, hyperlinks, layers and forms are lost. File size is not guaranteed to decrease.</div>`;
+case 'compress':return selector('quality','Compression level',[['.82','Light · better quality'],['.60','Balanced'],['.39','Strong · smaller images']])+field('max-mb','Optional target size (MB)','number','','Best effort only. Example: 2 for university upload portals.')+`<div class="info-banner">Scanned pages are rebuilt as images. Text, links and forms may be lost. Reduction and target size cannot be guaranteed.</div>`;
 case 'grayscale':case 'repair':return `<div class="info-banner">Pages are rasterized to recover or convert visible content. Text layers, links and editable forms will not be preserved.</div>`;
 case 'resize':return selector('resize-paper','Output paper size',[['A4','A4 (210 × 297 mm)'],['A3','A3 (297 × 420 mm)'],['A5','A5 (148 × 210 mm)'],['Letter','US Letter'],['Legal','US Legal']]);
 case 'compare':return `<div class="info-banner">Compares extracted text. Scanned documents without a text layer may not show differences.</div>`;
 case 'search-pdf':return field('query','Search words or phrase');
-case 'unlock-pdf':return '<div class="field"><label for="pdf-password">Current PDF password</label><input id="pdf-password" type="password" autocomplete="off" placeholder="Enter the password you know" /></div><div class="info-banner">Only PDFs you can open with the correct password are supported. The exported copy consists of rendered images; text selection, links and forms will be lost.</div>';
+case 'ocr':return selector('ocr-language','OCR language',[['eng','English'],['nep','नेपाली (Nepali)']])+`<div class="info-banner">OCR requires the Tesseract engine and matching language data, installed at build time or downloaded on first use. OCR is best effort and may be slow.</div>`;
+case 'protect-pdf':return field('protect-password','Create a password (at least 8 characters)','password')+field('protect-confirm','Confirm password','password')+`<div class="info-banner">This creates an AES-256 encrypted .spdf file, not a native password-protected PDF. Open it with Unlock on this site to restore the original PDF. Keep the password safe: it cannot be recovered.</div>`;
+case 'unlock-pdf':return '<div class="field"><label for="pdf-password">Current PDF password</label><input id="pdf-password" type="password" autocomplete="off" placeholder="Enter the password you know" /></div><div class="info-banner">For .spdf files, the original PDF is restored after entering the correct password. For standard encrypted PDFs, a password you know is required and output is image-based.</div>';
 case 'permission-check':return `<div class="info-banner">PDF permissions are document flags, not proof of access control. Encrypted PDFs may require a password and cannot be bypassed.</div>`;
 case 'pdf-to-text':case 'pdf-to-markdown':case 'pdf-to-html':return range();
 case 'sign-pdf':return '<div class="field"> <label>Draw your signature</label><canvas id="signature-canvas" class="signature-canvas" width="620" height="180" aria-label="Signature drawing area"></canvas><button class="button button-secondary button-small" type="button" id="clear-signature">Clear drawing</button></div>'+field('signature-page','Place on page','number','1')+'<div class="field-row">'+field('signature-x','From left (points)','number','55')+field('signature-y','From bottom (points)','number','75')+'</div>';
@@ -44,8 +48,10 @@ default:return '<p class="muted-small">Your file is processed on this device.</p
 export const value=(id,def='')=>document.getElementById(id)?.value??def;
 const output=(bytes,filename,mime='application/pdf',description='Your file is ready.')=>({bytes,filename,mime,description});
 export async function processFiles(slug,files,update=()=>{}){
-let first=files[0],b=first?first.name.replace(/\.[^.]*$/,''):'document';const PDFLib=()=>window.PDFLib;
-if(['jpg-to-pdf','png-to-pdf'].includes(slug)){return output(await imageToPdf(files,value('paper','fit')),`${b}-images.pdf`)}
+let first=files[0],b=first?basename(first):'document';const PDFLib=()=>window.PDFLib;
+if(['jpg-to-pdf','png-to-pdf','image-to-pdf'].includes(slug)){return output(await imageToPdf(files,value('paper','fit')),`${b}-images.pdf`)}
+if(slug==='protect-pdf'){const pwd=value('protect-password');const again=value('protect-confirm');if(pwd!==again)throw Error('The passwords do not match.');return output(await encryptPdf(first,pwd),`${b}.spdf`,'application/octet-stream','AES-GCM encrypted file. Open it using the Unlock tool on this website; this is not standard PDF password encryption.')}
+if(slug==='ocr'){return output(await runOCR(first,value('ocr-language','eng'),update),`${b}-ocr.txt`,'text/plain','OCR text extracted locally. Verify accuracy, especially for low-resolution scans.')}
 if(['word-to-pdf','excel-to-pdf','powerpoint-to-pdf','html-to-pdf'].includes(slug)){
 let kind={'word-to-pdf':'docx','excel-to-pdf':'xlsx','powerpoint-to-pdf':'pptx'}[slug];let text=kind?await officeText(first,kind):new DOMParser().parseFromString(await first.text(),'text/html').body.textContent;const bytes=await makeTextPdf(text,{title:b});return output(bytes,`${b}-converted.pdf`,'application/pdf','Converted readable text into a PDF. Original fonts, complex tables, images and positioning are not preserved.');}
 if(['pdf-to-jpg','pdf-to-png','pdf-to-text','pdf-to-word','pdf-to-excel','pdf-to-html','pdf-to-markdown','search-pdf','compare','analyzer','privacy-check','permission-check','reader'].includes(slug)){
@@ -60,11 +66,23 @@ let lines=await texts(pdf);let selected=pagesFromSpec(value('page-ranges'),lines
 }
 if(slug==='unlock-pdf'){
  const password=value('pdf-password');
+ if(/\.spdf$/i.test(first.name)){return output(await decryptPdf(first,password),`${b}-unlocked.pdf`,'application/pdf','Original PDF restored from the locally encrypted .spdf file.')}
  if(!password)throw Error('Enter the existing PDF password. This tool does not guess passwords.');
  const bytes=await rasterRebuild(first,{scale:1.5,quality:.89,password,onProgress:update});
  return output(bytes,`${b}-unlocked.pdf`,'application/pdf','Opened using the password you supplied. The output is a new image-based PDF; selectable text, forms and links are not retained.');
 }
-if(slug==='compress'||slug==='repair'||slug==='grayscale'){let q=slug==='compress'?+value('quality','.60'):.82;let scale=slug==='compress'?1.1:1.35;const bytes=await rasterRebuild(first,{scale,quality:q,gray:slug==='grayscale',onProgress:update});return output(bytes,`${b}-${slug}.pdf`,'application/pdf',`Original: ${sizeLabel(first.size)} · Result: ${sizeLabel(bytes.length)}. ${bytes.length<first.size?'Smaller by '+Math.round((1-bytes.length/first.size)*100)+'%.':'Output was not smaller.'} Rasterized pages are no longer searchable.`)}
+if(slug==='compress'||slug==='repair'||slug==='grayscale'){
+ let q=slug==='compress'?+value('quality','.60'):.82,scale=slug==='compress'?1.1:1.35;
+ let bytes=await rasterRebuild(first,{scale,quality:q,gray:slug==='grayscale',onProgress:update});
+ const targetMB=slug==='compress'?Number(value('max-mb','')):0;
+ if(slug==='compress'&&targetMB>0&&Number.isFinite(targetMB)&&targetMB<200&&bytes.length>targetMB*1048576){
+  // Best effort: try stronger settings and keep the smallest valid result. No success guarantee.
+  for(const [quality,ratio] of [[.43,.95],[.29,.75]]){const candidate=await rasterRebuild(first,{scale:ratio,quality,gray:false,onProgress:update});if(candidate.length<bytes.length)bytes=candidate;if(bytes.length<=targetMB*1048576)break}
+ }
+ const reduced=bytes.length<first.size;
+ const targetNotice=slug==='compress'&&targetMB>0?(bytes.length<=targetMB*1048576?'Target met.':'Target not reached; use a smaller PDF or different source.'):'';
+ return {...output(bytes,`${b}-${slug}.pdf`,'application/pdf',`Original: ${sizeLabel(first.size)} · Result: ${sizeLabel(bytes.length)}. ${reduced?'Smaller by '+Math.round((1-bytes.length/first.size)*100)+'%.':'Output was not smaller.'} ${targetNotice} Rasterized pages may no longer be searchable.`), stats:{'Before':sizeLabel(first.size),'After':sizeLabel(bytes.length),'Reduction':reduced?`${Math.round((1-bytes.length/first.size)*100)}%`:'Not smaller', ...(targetMB>0?{'Upload target':`${targetMB} MB (${bytes.length<=targetMB*1048576?'met':'not reached'})`}:{})}};
+ }
 const doc=await loadPdf(first),count=doc.getPageCount();const from=()=>pagesFromSpec(value('page-ranges'),count);
 if(slug==='merge'||slug==='academic-combiner'){let d=await PDFLib().PDFDocument.create();for(let i=0;i<files.length;i++){const source=await loadPdf(files[i]);let copied=await d.copyPages(source,source.getPageIndices());copied.forEach(p=>d.addPage(p));update(i+1,files.length)}return output(await d.save(),'merged-document.pdf')}
 if(slug==='split'){const every=value('split-mode')==='every';let ranges=every?Array.from({length:count},(_,i)=>[i]):value('page-ranges').split(',').map(s=>pagesFromSpec(s,count));let outputs=[];for(let i=0;i<ranges.length;i++){const out=await copyPages(doc,ranges[i]);outputs.push({name:`${b}-part-${i+1}.pdf`,data:await out.save()});update(i+1,ranges.length)}if(outputs.length===1)return output(outputs[0].data,outputs[0].name);return output(await makeZip(outputs),`${b}-split.zip`,'application/zip',`${outputs.length} PDF files in ZIP archive.`)}

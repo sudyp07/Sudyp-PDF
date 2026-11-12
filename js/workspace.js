@@ -1,6 +1,7 @@
-import {mountShell,icon,esc,notify,bySlug,recent,url} from './ui.js?v=5';
-import {loadLib,loadPdf,readPdf,render,sizeLabel,blobDownload,basename,pagesFromSpec,canvasBlob} from './core.js?v=5';
-import {processFiles,optionsFor,value,makeZip} from './processors.js?v=5';
+import {recordLocalJob,getLocalStats} from './local-stats.js?v=9';
+import {mountShell,icon,esc,notify,bySlug,recent,url} from './ui.js?v=9';
+import {loadLib,loadPdf,readPdf,render,sizeLabel,blobDownload,basename,pagesFromSpec,canvasBlob} from './core.js?v=9';
+import {processFiles,optionsFor,value,makeZip} from './processors.js?v=9';
 mountShell();
 const slug=document.documentElement.dataset.tool;
 const tool=bySlug(slug);
@@ -13,11 +14,12 @@ recent(slug);
 const $=id=>document.getElementById(id);
 const extra=$('workspace-extra'), fileInput=$('file-input'),drop=$('dropzone');
 const interactive=new Set(['organize','edit-pdf','sign-pdf','reader','form-filler']);
-const batchable=tool.input==='single'&&!interactive.has(slug);
-const multiple=['multiple','multiple-two','images'].includes(tool.input)||batchable;
-fileInput.multiple=multiple;fileInput.accept=({ 'single':'.pdf,application/pdf','multiple':'.pdf,application/pdf','multiple-two':'.pdf,application/pdf','images':'.jpg,.jpeg,.png,image/jpeg,image/png','single-docx':'.docx','single-xlsx':'.xlsx','single-pptx':'.pptx','single-html':'.html,.htm' }[tool.input]||'.pdf');
+const batchable=(tool.input==='single'||tool.input==='pdf-or-image')&&!interactive.has(slug);
+const multiple=['multiple','multiple-two','images','pdf-or-image'].includes(tool.input)||batchable;
+fileInput.multiple=multiple;fileInput.accept=({ 'single':'.pdf,application/pdf','multiple':'.pdf,application/pdf','multiple-two':'.pdf,application/pdf','images':'.jpg,.jpeg,.png,image/jpeg,image/png','single-docx':'.docx','single-xlsx':'.xlsx','single-pptx':'.pptx','single-html':'.html,.htm','pdf-or-image':'.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png' }[tool.input]||'.pdf');
 if(slug==='jpg-to-pdf')fileInput.accept='.jpg,.jpeg,image/jpeg';
 if(slug==='png-to-pdf')fileInput.accept='.png,image/png';
+if(slug==='unlock-pdf')fileInput.accept='.pdf,.spdf';
 fileInput.setAttribute('aria-label',`Select ${tool.title} input files`);
 // Native label[for=file-input] opens the file chooser even if application code fails.
 $('options-container').innerHTML=optionsFor(slug);
@@ -25,9 +27,12 @@ $('drop-caption').textContent=multiple?'Select one or several files':'Choose a d
 $('drop-hint').textContent=tool.input?.includes('docx')?'DOCX file only':tool.input?.includes('xlsx')?'XLSX file only':tool.input?.includes('pptx')?'PPTX file only':tool.input?.includes('html')?'HTML file only':tool.input==='images'?'JPG or PNG images':'PDF files · up to 200 MB per file';
 let files=[],output=null,processing=false,organizePages=[],editorMarks=[],editorRedo=[],editorPage=1,editorPDF=null,readerPDF=null,readerPage=1,readerZoom=1,signatureDrawn=false;
 const setStatus=(msg,error=false)=>{let e=$('status');e.textContent=msg;e.classList.toggle('error',error)};
+const progress=(current=null,total=null)=>{const bar=$('workspace-progress'),fill=$('workspace-progress-fill');if(!bar||!fill)return;bar.classList.add('is-visible');bar.classList.toggle('indeterminate',current===null||!total);if(current!==null&&total){const pct=Math.max(0,Math.min(100,current/total*100));fill.style.width=pct+'%';bar.setAttribute('aria-valuenow',String(Math.floor(pct)))}else{fill.style.width='';bar.removeAttribute('aria-valuenow')}};
+const clearProgress=()=>{$('workspace-progress')?.classList.remove('is-visible','indeterminate')};
+const updateCounter=()=>{const el=$('workspace-local-count');if(el)el.textContent=getLocalStats().files+' files processed locally'};updateCounter();document.addEventListener('sudyp:local-job',updateCounter);
 const list=$('file-list');
 const loadFiles=async next=>{
-  try{if(!next.length)return;for(let f of next){let ext=f.name.split('.').pop().toLowerCase();const types={'images':slug==='jpg-to-pdf'?['jpg','jpeg']:slug==='png-to-pdf'?['png']:['jpg','jpeg','png'],'single-docx':['docx'],'single-xlsx':['xlsx'],'single-pptx':['pptx'],'single-html':['html','htm']}[tool.input]||['pdf'];if(!types.includes(ext))throw Error(`Unsupported file: ${f.name}. Expected ${types.join(' or ').toUpperCase()}.`);if(f.size===0||f.size>200*1024*1024)throw Error('Files must be non-empty and no more than 200 MB each.')}
+  try{if(!next.length)return;for(let f of next){let ext=f.name.split('.').pop().toLowerCase();const types={'images':slug==='jpg-to-pdf'?['jpg','jpeg']:slug==='png-to-pdf'?['png']:['jpg','jpeg','png'],'pdf-or-image':['pdf','jpg','jpeg','png'],'single-docx':['docx'],'single-xlsx':['xlsx'],'single-pptx':['pptx'],'single-html':['html','htm']}[tool.input]||(slug==='unlock-pdf'?['pdf','spdf']:['pdf']);if(!types.includes(ext))throw Error(`Unsupported file: ${f.name}. Expected ${types.join(' or ').toUpperCase()}.`);if(f.size===0||f.size>200*1024*1024)throw Error('Files must be non-empty and no more than 200 MB each.')}
     if(tool.input==='multiple-two'&&[...files,...next].length>2)throw Error('This comparison accepts exactly two PDFs. Remove one before adding more.');
     files=multiple?[...files,...next]:[next[0]];
     output=null;$('result-container').innerHTML='';setStatus(`${files.length} file${files.length===1?'':'s'} ready. Choose options, then create output.`);renderFileList();$('process-button').disabled=false; 
@@ -43,22 +48,23 @@ function renderFileList(){list.innerHTML=files.map((f,i)=>`<div class="file-item
 drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click()}});
 $('reset-button').addEventListener('click',()=>{files=[];output=null;organizePages=[];editorMarks=[];editorRedo=[];readerPDF=null;editorPDF=null;list.innerHTML='';extra.innerHTML='';extra.style.display='none';$('result-container').innerHTML='';$('form-fields')?.replaceChildren();setStatus('Workspace cleared. No files are retained.');fileInput.value='';});
 $('process-button').addEventListener('click',async()=>{
-  if(processing)return;if(!files.length){setStatus('Choose files first using the blue Choose files button.',true);notify('Select a file before processing.','error');return}if(tool.input==='multiple-two'&&files.length!==2){notify('Select two PDFs to compare.','error');return}processing=true;const button=$('process-button');button.disabled=true;button.innerHTML=`${icon('settings',18)} Working…`;setStatus('Processing locally in your browser…');$('result-container').innerHTML='';output=null;
+  if(processing)return;if(!files.length){setStatus('Choose files first using the blue Choose files button.',true);notify('Select a file before processing.','error');return}if(tool.input==='multiple-two'&&files.length!==2){notify('Select two PDFs to compare.','error');return}processing=true;const button=$('process-button');button.disabled=true;button.innerHTML=`${icon('settings',18)} Working…`;setStatus('Processing locally in your browser…');$('result-container').innerHTML='';output=null;progress();
   try{let result;if(slug==='organize')result=await exportOrganized();else if(slug==='edit-pdf')result=await exportEdited();else if(slug==='sign-pdf')result=await exportSigned();else if(batchable&&files.length>1){
       const results=[];
       for(let i=0;i<files.length;i++){
         setStatus(`Processing file ${i+1} of ${files.length}: ${files[i].name}`);
-        const item=await processFiles(slug,[files[i]]);
+        const item=await processFiles(slug,[files[i]]);progress(i+1,files.length);
         if(item.bytes==null)throw Error(`No downloadable output was generated for ${files[i].name}.`);
         results.push({name:item.filename,data:item.bytes});
       }
       result={bytes:await makeZip(results),filename:`${slug}-results.zip`,mime:'application/zip',description:`${results.length} processed files are ready in one ZIP.`};
-    }else result=await processFiles(slug,files,(i,total)=>setStatus(`Processed ${i} of ${total} ${['jpg-to-pdf','png-to-pdf','merge'].includes(slug)?'files':'pages'}…`));
-    output=result;showResult(result);setStatus('Completed successfully.');notify('File processed on your device.','success')
+    }else result=await processFiles(slug,files,(i,total)=>{progress(i,total);setStatus(`Processed ${i} of ${total} ${['jpg-to-pdf','png-to-pdf','image-to-pdf','merge'].includes(slug)?'files':'pages'}…`)});
+    output=result;showResult(result);progress(1,1);recordLocalJob(files.length);setStatus('Completed successfully.');notify('File processed on your device.','success')
   }catch(e){let msg=String(e.message||e).replace(/Failed to parse PDF document.*/,'The PDF could not be read. It may be damaged or password-protected.');if(/encrypted|PasswordException|password.*incorrect/i.test(msg))msg='This PDF is password-protected or the password is incorrect. Try Unlock with password using the correct password.';setStatus(msg,true);notify(msg,'error')}
-  finally{processing=false;button.disabled=false;button.innerHTML=`${icon('check',18)} Create output`}
+  finally{processing=false;button.disabled=false;button.innerHTML=`${icon('check',18)} Create output`;setTimeout(clearProgress,1700)}
 });
 function showResult(r){let elem=$('result-container');let desc=esc(r.description||'Processing completed.');let info=`<h3>${icon('check',18)} Finished</h3><p>${desc}</p>`;
+if(r.stats?.Before&&r.stats?.After)info+=`<div class="result-numbers"><span><small>Before</small><strong>${esc(r.stats.Before)}</strong></span><span class="arrow">→</span><span><small>After</small><strong>${esc(r.stats.After)}</strong></span></div>`;
 if(r.stats)info+=`<div class="table-output"><table><tbody>${Object.entries(r.stats).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>`;
 if(r.searchResults)info+=`<div class="table-output"><table><thead><tr><th>Page</th><th>Matches</th><th>Excerpt</th></tr></thead><tbody>${r.searchResults.map(x=>`<tr><td>${x.page}</td><td>${x.count}</td><td>${esc(x.snippet)}</td></tr>`).join('')}</tbody></table></div>`;
 if(r.diffs)info+=r.diffs.length?`<div class="compare-columns">${r.diffs.slice(0,5).map(d=>`<section><strong>Page ${d.page} · First</strong><pre>${esc(d.left.slice(0,1400))}</pre><strong>Second</strong><pre>${esc(d.right.slice(0,1400))}</pre></section>`).join('')}</div>`:'<p>No differences in extracted text were found.</p>';

@@ -1,12 +1,13 @@
 {
-  "name": "SUDYP PDF",
+  "id": "./",
+  "name": "SUDYP PDF — Private Document Tools",
   "short_name": "SUDYP PDF",
-  "description": "Fast, free, browser-based PDF document tools.",
+  "description": "Free, local-first PDF tools with an installable offline shell. No accounts, no document uploads.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#745236",
+  "theme_color": "#087858",
   "icons": [
     {
       "src": "./assets/icon-192.png",
@@ -17,6 +18,23 @@
       "src": "./assets/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Merge PDF",
+      "url": "./tools/merge.html",
+      "description": "Join PDF documents"
+    },
+    {
+      "name": "Compress PDF",
+      "url": "./tools/compress.html",
+      "description": "Reduce the size of scanned PDF files"
+    },
+    {
+      "name": "Student tools",
+      "url": "./student-tools.html",
+      "description": "Academic PDF tools"
     }
   ]
 }

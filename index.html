@@ -1,85 +1,57 @@
 <!doctype html>
 <html lang="en" data-base=".">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f8f5ee">
-  <meta name="description" content="SUDYP PDF: straightforward PDF tools for merging, splitting, editing, converting and organizing documents, free in your browser.">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="SUDYP PDF">
-  <meta property="og:title" content="SUDYP PDF — Free PDF tools">
-  <meta property="og:description" content="Simple PDF tools. Choose a document, make changes and save it.">
-  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./css/style.css?v=5">
-  <link rel="stylesheet" href="./css/themes.css">
-  <link rel="stylesheet" href="./css/components.css?v=5"><link rel="stylesheet" href="./css/tools.css?v=5"><link rel="stylesheet" href="./css/responsive.css">
-  <link rel="stylesheet" href="./css/vintage.css?v=5">
-  <title>SUDYP PDF — Free PDF tools</title>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#087858"><meta name="description" content="Merge, split, compress, convert and edit PDFs free in your browser. No upload, no signup, no account. Works offline after one-time engine setup.">
+ <title>Free PDF Tools — Merge, Split, Compress &amp; Edit | SUDYP PDF</title>
+ <link rel="canonical" href="https://sudyp07.github.io/sudyp-pdf/">
+ <meta property="og:type" content="website"><meta property="og:site_name" content="SUDYP PDF"><meta property="og:title" content="Free PDF Tools — Your documents stay yours"><meta property="og:description" content="Merge, compress, split and edit PDFs locally in your browser. Free and private."><meta property="og:image" content="https://sudyp07.github.io/sudyp-pdf/assets/og-cover.png"><meta name="twitter:card" content="summary_large_image">
+ <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="./manifest.json"><link rel="stylesheet" href="./css/style.css?v=9"><link rel="stylesheet" href="./css/themes.css"><link rel="stylesheet" href="./css/components.css?v=9"><link rel="stylesheet" href="./css/tools.css?v=9"><link rel="stylesheet" href="./css/responsive.css?v=9"><link rel="stylesheet" href="./css/next.css?v=9">
+ <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"SUDYP PDF","applicationCategory":"ProductivityApplication","operatingSystem":"Any modern browser","description":"Private, free, browser-based PDF document tools with offline support after an initial library download.","url":"https://sudyp07.github.io/sudyp-pdf/","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
-  <div id="site-header"></div>
-  <main>
-    <section class="home-hero">
-      <div class="container home-hero-grid">
-        <div>
-          <div class="home-eyebrow">DOCUMENT TOOLS / FREE TO USE</div>
-          <h1>Make working with PDFs <em>simple.</em></h1>
-          <p>Merge a few files. Remove a page. Save a document in a different format. All the useful tools, without the clutter.</p>
-          <div class="home-buttons">
-            <a class="button button-primary" href="./tools.html">Explore all tools <span aria-hidden="true">↗</span></a>
-            <a class="button button-secondary" href="./student-tools.html">Student tools</a>
-          </div>
-          <div class="home-micro">No sign-up <span aria-hidden="true">·</span> No fees <span aria-hidden="true">·</span> Files stay in your browser</div>
-        </div>
-        <aside class="home-first-tools" aria-label="Quick access to PDF tools">
-          <span class="home-first-heading">START WITH A TOOL</span>
-          <a href="./tools/merge.html"><span>01</span><strong>Merge PDF</strong><span aria-hidden="true">↗</span></a>
-          <a href="./tools/split.html"><span>02</span><strong>Split PDF</strong><span aria-hidden="true">↗</span></a>
-          <a href="./tools/compress.html"><span>03</span><strong>Compress PDF</strong><span aria-hidden="true">↗</span></a>
-          <a href="./tools/organize.html"><span>04</span><strong>Organize pages</strong><span aria-hidden="true">↗</span></a>
-          <a href="./tools/pdf-to-word.html"><span>05</span><strong>PDF to Word</strong><span aria-hidden="true">↗</span></a>
-          <div class="home-first-note">Choose a tool, add your files, and download the result.</div>
-        </aside>
-      </div>
+ <div id="site-header"></div>
+ <main>
+  <section class="home-hero" aria-labelledby="home-title">
+   <div class="container home-hero-grid">
+    <div class="hero-copy">
+     <div class="home-eyebrow"><span class="hero-online-dot"></span><span data-i18n="eyebrow">PRIVATE PDF WORKSPACE · FREE FOREVER</span></div>
+     <h1 id="home-title" data-i18n="heroTitle">The simplest way to work with <em>PDFs.</em></h1>
+     <p class="hero-intro" data-i18n="heroIntro">Merge, split, compress and organise documents right on your device. No accounts, no subscriptions, no file uploads.</p>
+     <div class="home-buttons"><a class="button button-primary" href="./tools.html" data-i18n="browseTools">Explore PDF tools →</a><a class="button button-secondary" href="./student-tools.html" data-i18n="studentTools">Student tools ↗</a></div>
+     <div class="hero-points"><span>✓ <span data-i18n="heroProof1">No signup</span></span><span>✓ <span data-i18n="heroProof2">No paid tiers</span></span><span>✓ <span data-i18n="heroProof3">Documents never uploaded</span></span></div>
+    </div>
+    <section class="hero-upload-card" aria-label="Quick PDF tools">
+     <div class="upload-card-top"><div><h2 data-i18n="heroDropHead">Start with your document</h2><p data-i18n="heroDropHelp">Choose files, pick a tool, and download.</p></div><span class="privacy-pill" id="hero-privacy">🔒 0 bytes uploaded</span></div>
+     <div class="hero-drop" id="dropzone" role="group" aria-label="Drop PDF files here or browse">
+      <div class="hero-upload-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m0 0-5 5m5-5 5 5M4 16v4h16v-4"/></svg></div>
+      <strong data-i18n="dropPDF">Drop PDFs here</strong><p><span data-i18n="dropOr">or</span> <span class="hero-browse" data-i18n="browseFiles">browse files</span></p>
+      <small>PDF · multiple files · on-device</small><input type="file" id="file-input" accept=".pdf,application/pdf" multiple aria-label="Select PDF files to process">
+     </div>
+     <div class="hero-upload-list" id="hero-upload-list" aria-live="polite"></div>
+     <p class="tool-switch-label" data-i18n="pickTool">WHAT DO YOU WANT TO DO?</p>
+     <div class="tool-chips" role="group" aria-label="Choose an operation">
+      <button class="tool-chip" type="button" aria-pressed="true" data-quick="merge" data-i18n="chipMerge">Merge</button>
+      <button class="tool-chip" type="button" aria-pressed="false" data-quick="split" data-i18n="chipSplit">Split</button>
+      <button class="tool-chip" type="button" aria-pressed="false" data-quick="compress" data-i18n="chipCompress">Compress</button>
+     </div>
+     <label class="hero-pipeline" id="pipeline-label"><input type="checkbox" id="pipeline-check"><span data-i18n="pipeline">Also compress the merged document</span></label>
+     <div class="hero-jobbar"><button type="button" id="hero-run" class="button button-primary">Process PDF →</button><a href="./tools.html" data-i18n="advancedTools">All tools &amp; advanced options</a></div>
+     <div class="progress-rail" id="hero-progress" role="progressbar" aria-label="Processing progress"><div class="progress-fill" id="hero-progress-fill"></div></div>
+     <p id="hero-status" class="hero-jobstatus" role="status" aria-live="polite">Files are processed here, not uploaded.</p>
+     <div id="hero-result" class="hero-result" aria-live="polite"></div>
+     <div class="hero-last"><span id="processed-count">0 files processed locally</span><span aria-hidden="true">·</span><span id="offline-indicator">Offline setup available</span></div>
+     <select id="split-mode" hidden aria-label="Split mode"><option value="every" selected>Every page</option></select>
+     <select id="quality" hidden aria-label="Compression quality"><option value=".60" selected>Balanced</option></select>
     </section>
-    <section class="home-search-wrap" aria-label="Search PDF tools">
-      <div class="container">
-        <label for="home-search" class="search-label">Looking for something particular?</label>
-        <div class="top-search home-search-field">
-          <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-          <input type="search" id="home-search" placeholder="Search tools, such as rotate or PDF to JPG" autocomplete="off" aria-label="Search all PDF tools">
-          <span>Press Enter</span>
-        </div>
-        <div id="home-results" class="home-results" hidden></div>
-      </div>
-    </section>
-    <section class="section home-popular" id="popular">
-      <div class="container">
-        <div class="section-heading"><div><span class="home-eyebrow">MOST USED</span><h2>Everyday tools</h2><p>For the tasks that come up most often.</p></div><a href="./tools.html" class="inline-link">View all tools →</a></div>
-        <div class="tool-grid" id="popular-grid"></div>
-      </div>
-    </section>
-    <section class="section home-student">
-      <div class="container home-student-grid">
-        <div>
-          <span class="home-eyebrow">FOR STUDY & WORK</span>
-          <h2>Useful for the next assignment.</h2>
-          <p>Make a cover page, collect reading notes, combine handouts, and prepare a structured document for submission.</p>
-          <a class="button button-secondary" href="./student-tools.html">Explore student tools →</a>
-        </div>
-        <div class="student-cards" id="student-grid"></div>
-      </div>
-    </section>
-    <section class="section home-about">
-      <div class="container home-about-grid">
-        <div><span class="home-eyebrow">HOW IT WORKS</span><h2>Your files stay with you.</h2></div>
-        <div><p>Documents are processed inside your browser, not uploaded to a document-processing server. The PDF libraries may need an internet connection when first loaded.</p><a class="inline-link" href="./privacy.html">Read about privacy →</a></div>
-      </div>
-    </section>
-  </main>
-  <div id="site-footer"></div><div id="toasts" aria-live="polite"></div>
-  <script src="./js/upload-bridge.js?v=5" defer></script>
-  <script type="module" src="./js/app.js?v=5"></script>
-</body>
-</html>
+   </div>
+  </section>
+  <section class="home-search-wrap" aria-label="Find a PDF tool"><div class="container"><label for="home-search" class="search-label" data-i18n="searchLabel">Find the right tool</label><div class="top-search home-search-field"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="home-search" type="search" placeholder="Search tools, e.g. rotate, text, watermark" autocomplete="off" aria-label="Search PDF tools"><button type="button" class="nav-mini shortcut-key" data-open-command aria-label="Open command palette">Ctrl / ⌘ K</button></div><div id="home-results" class="home-results" hidden></div></div></section>
+  <section class="section home-popular" id="popular"><div class="container"><div class="section-heading"><div><span class="home-eyebrow">PDF ESSENTIALS</span><h2 data-i18n="popularTitle">Your everyday toolkit</h2><p>Real PDF operations, without a confusing interface.</p></div><a class="inline-link" href="./tools.html">All tools →</a></div><div class="tool-grid" id="popular-grid"></div></div></section>
+  <section class="section home-student"><div class="container home-student-grid"><div><span class="home-eyebrow">STUDY SMARTER</span><h2 data-i18n="studentTitle">Ready for your next submission.</h2><p>Make academic covers, tidy references, combine assignments, and prepare PDFs for upload limits.</p><a class="button button-secondary" href="./student-tools.html">Explore student tools →</a></div><div class="student-cards" id="student-grid"></div></div></section>
+  <section class="section home-about"><div class="container home-about-grid"><div><span class="home-eyebrow">HOW PRIVACY WORKS</span><h2>Zero document uploads. That's the point.</h2></div><div><p>Files are handled in your browser. We store no document contents or filenames on a server. Some processing engines must be downloaded once before fully offline use.</p><a class="inline-link" href="./privacy.html">Read our privacy details →</a></div></div></section>
+  <section class="home-faq"><div class="container"><div class="home-eyebrow">GOOD TO KNOW</div><h2>Questions, answered.</h2><details><summary>Do you upload my PDFs to a server?</summary><p>No. The PDF document data is processed in your browser. Processing libraries may be downloaded from CDNs if local copies are not yet available.</p></details><details><summary>Does the app work offline?</summary><p>The website is installable and the app shell works offline. PDF engines work offline after the optional one-time library setup, which GitHub Pages deployment can bundle automatically.</p></details><details><summary>Will compressing always make a PDF smaller?</summary><p>No. Results depend on the contents. Compression may flatten pages to images and make searchable text unavailable. Actual before-and-after sizes are shown.</p></details></div></section>
+ </main>
+ <div id="site-footer"></div><div id="toasts" aria-live="polite"></div>
+ <script src="./js/upload-bridge.js?v=9" defer></script><script type="module" src="./js/app.js?v=9"></script><script type="module" src="./js/hero.js?v=9"></script>
+</body></html>

@@ -1,0 +1,60 @@
+name: Publish SUDYP PDF to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download pinned offline PDF engines
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p vendor/tessdata
+          curl -fLSs --retry 3 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' -o vendor/pdf-lib.min.js
+          curl -fLSs --retry 3 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js' -o vendor/pdf.min.js
+          curl -fLSs --retry 3 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js' -o vendor/pdf.worker.min.js
+          # OCR assets are optional, and are fetched for English and Nepali when available.
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js' -o vendor/tesseract.min.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js' -o vendor/tesseract-worker.min.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js' -o vendor/tesseract-core-simd.wasm.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd.wasm' -o vendor/tesseract-core-simd.wasm || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core.wasm.js' -o vendor/tesseract-core.wasm.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core.wasm' -o vendor/tesseract-core.wasm || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js' -o vendor/tesseract-core-lstm.wasm.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm' -o vendor/tesseract-core-lstm.wasm || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd-lstm.wasm.js' -o vendor/tesseract-core-simd-lstm.wasm.js || true
+          curl -fLSs --retry 2 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd-lstm.wasm' -o vendor/tesseract-core-simd-lstm.wasm || true
+          curl -fLSs --retry 2 'https://tessdata.projectnaptha.com/4.0.0_fast/eng.traineddata.gz' -o vendor/tessdata/eng.traineddata.gz || true
+          curl -fLSs --retry 2 'https://tessdata.projectnaptha.com/4.0.0_fast/nep.traineddata.gz' -o vendor/tessdata/nep.traineddata.gz || true
+          find vendor -type f -size 0 -delete
+      - name: Generate offline asset inventory
+        run: |
+          python3 scripts/generate-sw-assets.py
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Stage only public static assets
+        run: |
+          mkdir -p _site
+          cp .nojekyll *.html *.xml *.txt *.json *.js _site/
+          cp -R assets css js tools student vendor _site/
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
